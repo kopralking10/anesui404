@@ -1,0 +1,496 @@
+<title>ANESUI404</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Share+Tech+Mono&display=swap">
+<style>
+:root { color-scheme: dark; }
+*,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+
+html, body {
+  width:100%; min-height:100vh;
+  background:#000;
+  color:#fff;
+  font-family:'Share Tech Mono', monospace;
+  overflow-x:hidden;
+}
+
+/* ── NOISE CANVAS ── */
+#noise {
+  position:fixed; inset:0; z-index:0;
+  pointer-events:none; opacity:.045;
+  mix-blend-mode: screen;
+}
+
+/* ── SCANLINE ── */
+.scan {
+  position:fixed; inset:0; z-index:2; pointer-events:none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0px, transparent 2px,
+    rgba(0,0,0,0.18) 2px, rgba(0,0,0,0.18) 4px
+  );
+}
+
+/* ── VIGNETTE ── */
+.vig {
+  position:fixed; inset:0; z-index:2; pointer-events:none;
+  background: radial-gradient(ellipse 80% 80% at 50% 50%, transparent 40%, rgba(0,0,0,.92) 100%);
+}
+
+/* ── LAYOUT ── */
+.page {
+  position:relative; z-index:10;
+  min-height:100vh;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  gap:0;
+  padding:40px 16px;
+}
+
+/* ── TOP META ── */
+.meta {
+  position:fixed; top:0; left:0; right:0;
+  padding:14px 24px;
+  display:flex; justify-content:space-between; align-items:center;
+  font-size:10px; letter-spacing:.2em; color:#3a0000;
+  border-bottom:1px solid #1a0000;
+  background:rgba(0,0,0,.8);
+  backdrop-filter:blur(4px);
+  z-index:20;
+}
+.meta-dot { width:6px; height:6px; border-radius:50%; background:#cc0000; display:inline-block; margin-right:6px; animation:mdot 1.4s step-end infinite; }
+@keyframes mdot { 0%,100%{opacity:1} 50%{opacity:0} }
+.meta-live { color:#cc0000; }
+
+/* ── HERO BLOCK ── */
+.hero {
+  display:flex; flex-direction:column;
+  align-items:center;
+  gap:0;
+  padding:60px 0 0;
+}
+
+/* ── GLITCH TITLE ── */
+.gtitle {
+  position:relative;
+  font-family:'Orbitron', monospace;
+  font-weight:900;
+  font-size: clamp(3.2rem, 13vw, 7rem);
+  line-height:.95;
+  letter-spacing:-.01em;
+  color:#fff;
+  user-select:none;
+  mix-blend-mode:normal;
+}
+
+/* RGB SPLIT LAYERS */
+.gtitle .g-r {
+  position:absolute; inset:0;
+  color:#ff0000; mix-blend-mode:screen;
+  animation:splitR 5s infinite;
+  pointer-events:none;
+}
+.gtitle .g-b {
+  position:absolute; inset:0;
+  color:#0044ff; mix-blend-mode:screen;
+  animation:splitB 5s infinite;
+  pointer-events:none;
+}
+
+@keyframes splitR {
+  0%,82%,100% { transform:translate(0); opacity:0; clip-path:none; }
+  83%  { opacity:.8; transform:translate(-5px,0); clip-path:polygon(0 10%,100% 10%,100% 38%,0 38%); }
+  85%  { opacity:.6; transform:translate(5px,1px); clip-path:polygon(0 55%,100% 55%,100% 75%,0 75%); }
+  87%  { opacity:0; }
+  91%  { opacity:.7; transform:translate(-3px,0); clip-path:polygon(0 20%,100% 20%,100% 50%,0 50%); }
+  93%  { opacity:0; }
+}
+@keyframes splitB {
+  0%,82%,100% { transform:translate(0); opacity:0; clip-path:none; }
+  83%  { opacity:.7; transform:translate(5px,0); clip-path:polygon(0 10%,100% 10%,100% 38%,0 38%); }
+  85%  { opacity:.5; transform:translate(-5px,-1px); clip-path:polygon(0 55%,100% 55%,100% 75%,0 75%); }
+  87%  { opacity:0; }
+  91%  { opacity:.6; transform:translate(3px,0); clip-path:polygon(0 20%,100% 20%,100% 50%,0 50%); }
+  93%  { opacity:0; }
+}
+
+/* HORIZONTAL GLITCH SLICE */
+.gtitle .g-slice {
+  position:absolute; inset:0;
+  color:#fff; background:transparent;
+  animation:hslice 6s infinite;
+  pointer-events:none;
+}
+@keyframes hslice {
+  0%,79%,100% { opacity:0; transform:translate(0); }
+  80% { opacity:1; transform:translateX(-8px); clip-path:polygon(0 42%,100% 42%,100% 48%,0 48%); }
+  81% { opacity:1; transform:translateX(8px); clip-path:polygon(0 42%,100% 42%,100% 48%,0 48%); }
+  82% { opacity:0; }
+  88% { opacity:1; transform:translateX(-4px); clip-path:polygon(0 66%,100% 66%,100% 70%,0 70%); }
+  89% { opacity:0; }
+}
+
+/* UNDER-TITLE LINE */
+.divline {
+  width:100%; height:1px; margin-top:18px;
+  background:linear-gradient(90deg, transparent 0%, #cc0000 30%, #ff0000 50%, #cc0000 70%, transparent 100%);
+  position:relative;
+}
+.divline::after {
+  content:'';
+  position:absolute; left:0; top:0; right:0; bottom:0;
+  background:inherit;
+  filter:blur(4px);
+  opacity:.6;
+}
+
+/* SUB LINE */
+.sub {
+  font-size:11px;
+  letter-spacing:.5em;
+  color:#550000;
+  margin-top:14px;
+  text-transform:uppercase;
+  text-align:center;
+}
+
+/* ── CENTER CANVAS (visual distortion art) ── */
+.art-wrap {
+  position:relative;
+  width:100%; max-width:680px;
+  margin:48px 0 36px;
+  overflow:hidden;
+}
+#artCanvas {
+  display:block;
+  width:100%; height:auto;
+  image-rendering:pixelated;
+}
+
+/* ── INFO GRID ── */
+.grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(160px,1fr));
+  gap:1px;
+  width:100%; max-width:680px;
+  border:1px solid #1a0000;
+  background:#1a0000;
+  margin-bottom:40px;
+}
+.cell {
+  background:#000;
+  padding:18px 16px;
+  position:relative;
+  overflow:hidden;
+}
+.cell::before {
+  content:'';
+  position:absolute; top:0; left:0; right:0;
+  height:1px;
+  background:linear-gradient(90deg, transparent, #cc0000, transparent);
+  transform:translateX(-100%);
+  animation:cellscan 4s linear infinite;
+}
+.cell:nth-child(2)::before { animation-delay:.8s; }
+.cell:nth-child(3)::before { animation-delay:1.6s; }
+.cell:nth-child(4)::before { animation-delay:2.4s; }
+@keyframes cellscan { 0%{transform:translateX(-100%)} 100%{transform:translateX(100%)} }
+
+.cell-label { font-size:9px; letter-spacing:.35em; color:#440000; margin-bottom:8px; text-transform:uppercase; }
+.cell-val {
+  font-family:'Orbitron', monospace;
+  font-size:1.5rem; font-weight:900;
+  color:#cc0000;
+  text-shadow:0 0 12px #cc000066;
+  font-variant-numeric:tabular-nums;
+  line-height:1;
+}
+.cell-val.sm { font-size:1rem; color:#fff; font-family:'Share Tech Mono',monospace; font-weight:400; }
+
+/* ── BOTTOM TERMINAL ── */
+.term {
+  width:100%; max-width:680px;
+  border:1px solid #1a0000;
+  background:#000;
+  margin-bottom:40px;
+}
+.tbar {
+  padding:10px 16px;
+  border-bottom:1px solid #1a0000;
+  display:flex; gap:8px; align-items:center;
+  background:#050000;
+}
+.tdot { width:8px; height:8px; border-radius:50%; }
+.td1{background:#cc0000;} .td2,.td3{background:#1a0000;}
+.tlbl { margin-left:auto; font-size:9px; color:#3a0000; letter-spacing:.2em; }
+.tbody { padding:20px 16px; font-size:12px; line-height:2; }
+.tc { color:#cc0000; }
+.to { color:#441111; }
+.tk { color:#ff1111; letter-spacing:.05em; }
+.cur {
+  display:inline-block; width:7px; height:13px; background:#cc0000;
+  vertical-align:middle; animation:blink .9s step-end infinite;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* ── FOOTER ── */
+.foot {
+  width:100%; max-width:680px;
+  border-top:1px solid #1a0000;
+  padding-top:16px;
+  display:flex; justify-content:space-between;
+  font-size:9px; letter-spacing:.25em; color:#250000;
+}
+.foot-r { color:#440000; }
+</style>
+
+<canvas id="noise"></canvas>
+<div class="scan"></div>
+<div class="vig"></div>
+
+<div class="meta">
+  <span><span class="meta-dot"></span><span class="meta-live">LIVE</span></span>
+  <span id="clock">--:--:--</span>
+  <span>SYS:NODE-7F3C&nbsp;|&nbsp;TOR:ON</span>
+</div>
+
+<div class="page">
+
+  <div class="hero">
+    <div class="gtitle">
+      ANESUI404
+      <span class="g-r" aria-hidden="true">ANESUI404</span>
+      <span class="g-b" aria-hidden="true">ANESUI404</span>
+      <span class="g-slice" aria-hidden="true">ANESUI404</span>
+    </div>
+    <div class="divline"></div>
+    <div class="sub">unauthorized access detected</div>
+  </div>
+
+  <!-- GLITCH ART CANVAS -->
+  <div class="art-wrap">
+    <canvas id="artCanvas" width="680" height="180"></canvas>
+  </div>
+
+  <!-- DATA GRID -->
+  <div class="grid">
+    <div class="cell">
+      <div class="cell-label">PACKETS</div>
+      <div class="cell-val" id="sv1">000000</div>
+    </div>
+    <div class="cell">
+      <div class="cell-label">LATENCY</div>
+      <div class="cell-val" id="sv2">000ms</div>
+    </div>
+    <div class="cell">
+      <div class="cell-label">STATUS</div>
+      <div class="cell-val sm" id="sv3">BYPASSED</div>
+    </div>
+    <div class="cell">
+      <div class="cell-label">UPTIME</div>
+      <div class="cell-val sm" id="uptime">00:00:00</div>
+    </div>
+  </div>
+
+  <!-- TERMINAL -->
+  <div class="term">
+    <div class="tbar">
+      <div class="tdot td1"></div>
+      <div class="tdot td2"></div>
+      <div class="tdot td3"></div>
+      <div class="tlbl">root@anesui404 — bash</div>
+    </div>
+    <div class="tbody" id="tb"></div>
+  </div>
+
+  <div class="foot">
+    <span>ANESUI404</span>
+    <span class="foot-r">© VOID — NO TRACE</span>
+  </div>
+
+</div>
+
+<script>
+/* ── NOISE ── */
+(function(){
+  const c = document.getElementById('noise');
+  const ctx = c.getContext('2d');
+  function resize(){ c.width=window.innerWidth; c.height=window.innerHeight; }
+  resize();
+  window.addEventListener('resize', resize);
+  function frame(){
+    const w=c.width, h=c.height;
+    const img = ctx.createImageData(w,h);
+    const d = img.data;
+    for(let i=0;i<d.length;i+=4){
+      const v = Math.random()*255|0;
+      d[i]=v; d[i+1]=0; d[i+2]=0; d[i+3]=18;
+    }
+    ctx.putImageData(img,0,0);
+    requestAnimationFrame(frame);
+  }
+  frame();
+})();
+
+/* ── GLITCH ART CANVAS ── */
+(function(){
+  const c = document.getElementById('artCanvas');
+  const ctx = c.getContext('2d');
+  const W=680, H=180;
+
+  // Waveform data
+  const pts = Array.from({length:W}, (_,i) => ({
+    base: H/2 + Math.sin(i*0.04)*28 + Math.sin(i*0.012)*18,
+  }));
+
+  let t = 0;
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    t += 0.018;
+
+    // Background subtle grid
+    ctx.strokeStyle='rgba(40,0,0,0.35)';
+    ctx.lineWidth=1;
+    for(let y=0;y<H;y+=20){
+      ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke();
+    }
+    for(let x=0;x<W;x+=40){
+      ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke();
+    }
+
+    // Waveform — main
+    ctx.beginPath();
+    ctx.moveTo(0, pts[0].base + Math.sin(t)*10);
+    for(let i=1;i<W;i++){
+      const y = pts[i].base + Math.sin(t + i*0.03)*10 + Math.sin(t*1.7 + i*0.007)*5;
+      ctx.lineTo(i, y);
+    }
+    ctx.strokeStyle='rgba(180,0,0,0.7)';
+    ctx.lineWidth=1.5;
+    ctx.stroke();
+
+    // Waveform fill
+    ctx.lineTo(W,H); ctx.lineTo(0,H); ctx.closePath();
+    const grad = ctx.createLinearGradient(0,0,0,H);
+    grad.addColorStop(0,'rgba(140,0,0,0.18)');
+    grad.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=grad;
+    ctx.fill();
+
+    // Second wave offset
+    ctx.beginPath();
+    ctx.moveTo(0, pts[0].base + Math.sin(t+1)*14);
+    for(let i=1;i<W;i++){
+      const y = pts[i].base + Math.sin(t+1 + i*0.03)*14 + Math.sin(t*2 + i*0.01)*4;
+      ctx.lineTo(i,y);
+    }
+    ctx.strokeStyle='rgba(80,0,0,0.4)';
+    ctx.lineWidth=1;
+    ctx.stroke();
+
+    // GLITCH SLICES — random horizontal bars
+    if(Math.random()>.88){
+      const sliceY = Math.random()*H|0;
+      const sliceH = (4+Math.random()*12)|0;
+      const shift = (Math.random()>0.5?1:-1) * (6+Math.random()*20)|0;
+      const id = ctx.getImageData(0,sliceY,W,sliceH);
+      ctx.putImageData(id, shift, sliceY);
+      // red channel bleed
+      ctx.fillStyle='rgba(255,0,0,0.06)';
+      ctx.fillRect(0,sliceY,W,sliceH);
+    }
+
+    // Vertical scan line
+    const scanX = (t*60|0) % W;
+    const sg = ctx.createLinearGradient(scanX-8,0,scanX+8,0);
+    sg.addColorStop(0,'rgba(180,0,0,0)');
+    sg.addColorStop(.5,'rgba(180,0,0,0.12)');
+    sg.addColorStop(1,'rgba(180,0,0,0)');
+    ctx.fillStyle=sg;
+    ctx.fillRect(scanX-8,0,16,H);
+
+    // Data labels on canvas
+    ctx.font='9px "Share Tech Mono"';
+    ctx.fillStyle='rgba(100,0,0,0.7)';
+    ctx.fillText('SIGNAL — 192.168.0.0/24', 12, 14);
+    ctx.fillText(`T+${(t*10|0)/10}s`, W-60, 14);
+
+    // Flat line segments (noise)
+    for(let i=0;i<3;i++){
+      if(Math.random()>.92){
+        const sx=Math.random()*W|0, sy=Math.random()*H|0, sw=(20+Math.random()*60)|0;
+        ctx.fillStyle='rgba(200,0,0,0.07)';
+        ctx.fillRect(sx,sy,sw,1);
+      }
+    }
+
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ── CLOCK ── */
+setInterval(()=>{
+  const n=new Date();
+  document.getElementById('clock').textContent=
+    [n.getHours(),n.getMinutes(),n.getSeconds()].map(v=>String(v).padStart(2,'0')).join(':');
+},1000);
+
+/* ── UPTIME ── */
+let up=0;
+setInterval(()=>{
+  up++;
+  const h=up/3600|0, m=(up%3600)/60|0, s=up%60;
+  document.getElementById('uptime').textContent=
+    [h,m,s].map(v=>String(v).padStart(2,'0')).join(':');
+},1000);
+
+/* ── COUNTERS ── */
+function count(id,target,suffix,dur){
+  const el=document.getElementById(id);
+  const pad=String(target).length;
+  let s=null;
+  (function step(ts){
+    if(!s)s=ts;
+    const p=Math.min((ts-s)/dur,1);
+    el.textContent=String(Math.floor(p*target)).padStart(pad,'0')+(suffix||'');
+    if(p<1)requestAnimationFrame(step);
+  })(performance.now());
+}
+setTimeout(()=>count('sv1',381927,'',2800),300);
+setTimeout(()=>count('sv2',23,'ms',1400),500);
+
+/* ── TERMINAL ── */
+(function(){
+  const lines=[
+    {c:'tc',v:'root@anesui404:~ $ '},
+    {c:'',  v:'ssh -i ghost.pem -p 443 void@0.0.0.0'},
+    {c:'to', v:'\nWarning: Permanently added \'0.0.0.0\' to known hosts.'},
+    {c:'to', v:'\n\n  █████╗ ███╗   ██╗███████╗███████╗██╗   ██╗██╗'},
+    {c:'to', v:'\n ██╔══██╗████╗  ██║██╔════╝██╔════╝██║   ██║██║'},
+    {c:'to', v:'\n ███████║██╔██╗ ██║█████╗  ███████╗██║   ██║██║'},
+    {c:'to', v:'\n ██╔══██║██║╚██╗██║██╔══╝  ╚════██║██║   ██║██║'},
+    {c:'to', v:'\n ██║  ██║██║ ╚████║███████╗███████║╚██████╔╝██║'},
+    {c:'to', v:'\n ╚═╝  ╚═╝╚═╝  ╚═══╝╚══════╝╚══════╝ ╚═════╝ ╚═╝'},
+    {c:'to', v:'\n'},
+    {c:'tk', v:'\n  404 — GHOST IN THE MACHINE'},
+    {c:'to', v:'\n  session encrypted · identity masked · no trace'},
+    {c:'to', v:'\n'},
+  ];
+  const tb=document.getElementById('tb');
+  let li=0,ci=0,last=0;
+  const spd={tc:30,'':55,to:8,tk:18};
+  function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+  function col(c){return{tc:'#cc0000','':'rgba(255,255,255,.85)',to:'#441111',tk:'#ff1111'}[c]||'#fff';}
+  function render(){
+    let h='';
+    for(let i=0;i<li;i++) h+=`<span style="color:${col(lines[i].c)}">${esc(lines[i].v)}</span>`;
+    if(li<lines.length) h+=`<span style="color:${col(lines[li].c)}">${esc(lines[li].v.slice(0,ci))}</span><span class="cur"></span>`;
+    tb.innerHTML=h;
+  }
+  (function step(ts){
+    if(li>=lines.length){render();return;}
+    const d=spd[lines[li].c]??20;
+    if(ts-last>d){last=ts;ci++;if(ci>lines[li].v.length){li++;ci=0;}render();}
+    requestAnimationFrame(step);
+  })(performance.now());
+})();
+</script>
